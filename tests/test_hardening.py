@@ -1,9 +1,11 @@
 import sqlite3
+from pathlib import Path
 
 import pytest
 
 from app.database import Database
 from app.parking import ParkingSystem
+from app.security import escape_html
 
 
 def test_waiting_queue_is_restored_after_database_reopen(tmp_path):
@@ -51,13 +53,9 @@ def test_database_enforces_one_active_session_per_registration(tmp_path):
     db.close()
 
 
-def test_standalone_schema_enables_foreign_keys(tmp_path):
-    schema = (tmp_path.parent.parent / "schema.sql")
-    # This test reads the checked-out project schema through the repository
-    # working directory, matching the standalone SQL file users execute.
-    schema = __import__("pathlib").Path("schema.sql")
+def test_standalone_schema_enables_foreign_keys():
     connection = sqlite3.connect(":memory:")
-    connection.executescript(schema.read_text(encoding="utf-8"))
+    connection.executescript(Path("schema.sql").read_text(encoding="utf-8"))
 
     with pytest.raises(sqlite3.IntegrityError):
         connection.execute(
@@ -65,3 +63,13 @@ def test_standalone_schema_enables_foreign_keys(tmp_path):
             "VALUES (999, 100, '2026-09-28T10:00:00', 'PAID')"
         )
     connection.close()
+
+
+def test_html_escaping_blocks_markup_in_user_supplied_values():
+    assert escape_html('<script>alert("x")</script>') == (
+        "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;"
+    )
+
+
+def test_html_escaping_handles_non_string_values():
+    assert escape_html(42) == "42"
