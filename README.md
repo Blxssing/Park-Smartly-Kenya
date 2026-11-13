@@ -84,6 +84,7 @@ app/                 Application modules
   datastructures.py  Linked-node stack and queue
   parking.py         Parking business rules
   web.py             Minimal local web demo
+  security.py        HTML output escaping helper
 docs/                Algorithm and data-structure notes
 tests/               Automated tests
 .github/workflows/   Continuous integration
