@@ -1,4 +1,3 @@
-import html
 import os
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -6,6 +5,7 @@ from urllib.parse import parse_qs
 
 from .database import Database
 from .parking import ParkingSystem
+from .security import escape_html
 
 DB_PATH = os.environ.get("PARKSMART_DB_PATH", "parksmart_web.db")
 db = Database(DB_PATH)
@@ -17,11 +17,6 @@ system = ParkingSystem(db)
 db_lock = threading.RLock()
 
 HTML = """<!doctype html><html><head><meta charset="utf-8"><title>ParkSmart Kenya</title><style>body{font-family:Arial;max-width:1000px;margin:40px auto;padding:0 20px}.slot{display:inline-block;padding:14px;margin:5px;border-radius:8px;background:#ddd}.available{background:#b9efc5}.occupied{background:#ffb8b8}form{margin:20px 0;padding:15px;border:1px solid #ddd}input,button{padding:9px;margin:4px}</style></head><body><h1>ParkSmart Kenya</h1><p>Local parking management demonstration</p><p><strong>Demo only:</strong> payments and barrier actions are simulated.</p><h2>Parking Slots</h2>{slots}<h2>Vehicle Entry</h2><form method="post"><input name="action" value="entry" type="hidden"><input name="registration" placeholder="KDA 123A" required><input name="time" placeholder="2026-09-28T08:00:00" required><button>Enter Vehicle</button></form><h2>Vehicle Exit</h2><form method="post"><input name="action" value="exit" type="hidden"><input name="registration" placeholder="KDA 123A" required><input name="time" placeholder="2026-09-28T10:00:00" required><button>Calculate Fee</button></form><h2>Payment simulation</h2><form method="post"><input name="action" value="pay" type="hidden"><input name="session_id" type="number" placeholder="Session ID" required><button>Simulate Payment &amp; Open Barrier</button></form><p>{message}</p></body></html>"""
-
-
-def escape_html(value):
-    """Escape untrusted values before inserting them into an HTML response."""
-    return html.escape(str(value), quote=True)
 
 
 class Handler(BaseHTTPRequestHandler):
