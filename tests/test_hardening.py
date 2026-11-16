@@ -53,6 +53,23 @@ def test_database_enforces_one_active_session_per_registration(tmp_path):
     db.close()
 
 
+def test_database_prevents_two_active_sessions_from_using_one_slot(tmp_path):
+    db = Database(str(tmp_path / "parking.db"))
+    db.seed_slots(1)
+    system = ParkingSystem(db)
+    system.enter_vehicle("KDA123A", "2026-09-28T08:00:00")
+
+    with pytest.raises(sqlite3.IntegrityError):
+        with db.conn:
+            db.conn.execute(
+                """INSERT INTO parking_sessions
+                   (registration, slot_id, entry_time, status)
+                   VALUES (?, ?, ?, ?)""",
+                ("KDB456B", 1, "2026-09-28T08:05:00", "ACTIVE"),
+            )
+    db.close()
+
+
 def test_standalone_schema_enables_foreign_keys():
     connection = sqlite3.connect(":memory:")
     connection.executescript(Path("schema.sql").read_text(encoding="utf-8"))
@@ -61,6 +78,28 @@ def test_standalone_schema_enables_foreign_keys():
         connection.execute(
             "INSERT INTO payments(session_id, amount, paid_at, status) "
             "VALUES (999, 100, '2026-09-28T10:00:00', 'PAID')"
+        )
+    connection.close()
+
+
+def test_standalone_schema_prevents_two_active_sessions_from_using_one_slot():
+    connection = sqlite3.connect(":memory:")
+    connection.executescript(Path("schema.sql").read_text(encoding="utf-8"))
+    cursor = connection.execute(
+        "INSERT INTO parking_slots(slot_number, status) VALUES ('A01', 'OCCUPIED')"
+    )
+    slot_id = cursor.lastrowid
+    connection.execute(
+        "INSERT INTO parking_sessions(registration, slot_id, entry_time, status) "
+        "VALUES ('KDA123A', ?, '2026-09-28T08:00:00', 'ACTIVE')",
+        (slot_id,),
+    )
+
+    with pytest.raises(sqlite3.IntegrityError):
+        connection.execute(
+            "INSERT INTO parking_sessions(registration, slot_id, entry_time, status) "
+            "VALUES ('KDB456B', ?, '2026-09-28T08:05:00', 'ACTIVE')",
+            (slot_id,),
         )
     connection.close()
 
