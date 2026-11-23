@@ -30,6 +30,8 @@ class Database:
         );
         CREATE UNIQUE INDEX IF NOT EXISTS idx_one_active_vehicle
           ON parking_sessions(registration) WHERE status IN ('ACTIVE','PAYMENT_PENDING');
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_one_active_session_per_slot
+          ON parking_sessions(slot_id) WHERE status IN ('ACTIVE','PAYMENT_PENDING');
         CREATE TABLE IF NOT EXISTS payments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id INTEGER NOT NULL UNIQUE,

@@ -64,3 +64,21 @@ def test_exit_before_entry_rejected():
     import pytest
     db,s=make_system(); s.enter_vehicle('A','2026-09-28T10:00:00')
     with pytest.raises(ValueError): s.request_exit('A','2026-09-28T09:00:00')
+
+def test_repeated_exit_request_is_rejected_without_changing_fee():
+    import pytest
+
+    db, system = make_system()
+    try:
+        system.enter_vehicle('KDA123A', '2026-09-28T08:00:00')
+        first_request = system.request_exit('KDA123A', '2026-09-28T10:00:00')
+
+        with pytest.raises(ValueError, match='exit request is already pending'):
+            system.request_exit('KDA123A', '2026-09-28T12:00:00')
+
+        session = system.session(first_request['session_id'])
+        assert session['status'] == 'PAYMENT_PENDING'
+        assert session['fee'] == first_request['fee']
+        assert session['exit_time'] == '2026-09-28T10:00:00'
+    finally:
+        db.close()
