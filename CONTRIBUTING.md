@@ -17,7 +17,7 @@ Use Python 3.10 or newer:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\\Scripts\\Activate.ps1
+source .venv/bin/activate  # Windows: .venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
 python -m pytest -q
 ```
