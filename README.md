@@ -50,7 +50,7 @@ Activate the environment:
 # macOS / Linux
 source .venv/bin/activate
 # Windows PowerShell
-.venv\\Scripts\\Activate.ps1
+.venv\Scripts\Activate.ps1
 ```
 
 Install the package and development dependencies:
