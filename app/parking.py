@@ -67,6 +67,8 @@ class ParkingSystem:
         row = self._active(registration)
         if not row:
             raise ValueError('Vehicle is not currently parked')
+        if row['status'] != 'ACTIVE':
+            raise ValueError('An exit request is already pending for this vehicle')
         entry = self.parse_time(row['entry_time'])
         exit_dt = self.parse_time(exit_time)
         minutes = int((exit_dt - entry).total_seconds() // 60)
